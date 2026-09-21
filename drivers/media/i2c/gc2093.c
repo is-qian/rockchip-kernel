@@ -1480,6 +1480,12 @@ static void gc2093_set_native_mode(struct gc2093 *gc2093,
 	__v4l2_ctrl_s_ctrl(gc2093->exposure, mode->exp_def);
 	gc2093->cur_vts = mode->vts_def;
 	gc2093->cur_fps = mode->max_fps;
+
+	/* Runtime mode switch may skip power_on(); keep xvclk in sync. */
+	if (gc2093->power_on && clk_get_rate(gc2093->xvclk) != mode->xvclk_freq) {
+		if (clk_set_rate(gc2093->xvclk, mode->xvclk_freq))
+			dev_warn(gc2093->dev, "Failed to set xvclk rate\n");
+	}
 }
 
 static int gc2093_set_fmt(struct v4l2_subdev *sd,
