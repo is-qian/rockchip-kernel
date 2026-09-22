@@ -489,6 +489,7 @@ dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-box-X88PRO-npu.dtb
 dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-h96max-v56.dtb
 dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-lckfb-tspi.dtb
 dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-luckfox-core3566.dtb
+dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-microduck.dtb
 dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-nanopi-r3-rev01.dtb
 dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-orangepi-3b-v1.1.dtb
 dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3566-orangepi-3b-v2.1.dtb
