@@ -3,16 +3,19 @@
  * Copyright (c) 2022 Rockchip Electronics Co., Ltd.
  * Copyright (c) 2026 Microduck Team.
  *
- * Microduck board bring-up DTS: the RK3566 platform, power tree, debug UART,
- * eMMC and USB-C OTG path are enabled. Other board peripherals remain
- * disabled until the first physical board is available for validation.
+ * Microduck board DTS. Platform, power tree, debug UART, eMMC, USB-C OTG,
+ * recovery key, EEPROM, Qwiic, fan, audio, GC2613/GC2093 camera, NFC,
+ * DYNAMIXEL and WQ9201S wireless follow the V0.1 (260915) schematic.
+ * Electrical details are pending first-board validation.
  */
 
 /dts-v1/;
 
+#include <dt-bindings/clock/rk3568-cru.h>
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/pinctrl/rockchip.h>
 #include <dt-bindings/input/rk-input.h>
+#include <dt-bindings/power/rk3568-power.h>
 #include "rk3566.dtsi"
 
 / {
@@ -75,6 +78,107 @@
 		regulator-min-microvolt = <5000000>;
 		regulator-max-microvolt = <5000000>;
 		vin-supply = <&vcc_sys>;
+	};
+
+	/* Recovery key on SW2 pulls SARADC_VIN0 low (sheet 21) */
+	adc_keys: adc-keys {
+		compatible = "adc-keys";
+		io-channels = <&saradc 0>;
+		io-channel-names = "buttons";
+		keyup-threshold-microvolt = <1800000>;
+		poll-interval = <100>;
+
+		recovery-key {
+			label = "recovery";
+			linux,code = <KEY_F12>;
+			press-threshold-microvolt = <1750>;
+		};
+	};
+
+	/*
+	 * Camera rails: CAM_1V8 is VCC_1V8 through R24 0R. CAM_1V2/CAM_2V8
+	 * come from SGM2036S LDOs whose EN pins chain off CAM_1V8/CAM_1V2,
+	 * so all three rails are always on (sheet 15).
+	 */
+	cam_2v8: cam-2v8 {
+		compatible = "regulator-fixed";
+		regulator-name = "cam_2v8";
+		regulator-always-on;
+		regulator-boot-on;
+		regulator-min-microvolt = <2800000>;
+		regulator-max-microvolt = <2800000>;
+		vin-supply = <&vcc3v3_sys>;
+	};
+
+	cam_1v2: cam-1v2 {
+		compatible = "regulator-fixed";
+		regulator-name = "cam_1v2";
+		regulator-always-on;
+		regulator-boot-on;
+		regulator-min-microvolt = <1200000>;
+		regulator-max-microvolt = <1200000>;
+		vin-supply = <&vcc3v3_sys>;
+	};
+
+	/* 5V 4-wire fan: PWM8_M0 through SN74LVC1T45 level shift (sheet 21) */
+	fan: pwm-fan {
+		compatible = "pwm-fan";
+		pwms = <&pwm8 0 40000 0>;
+		#cooling-cells = <2>;
+		cooling-levels = <0 64 128 192 255>;
+	};
+
+	/* RK809 codec HPL_OUT feeds NS4150B mono amp (sheet 7) */
+	rk809_sound: rk809-sound {
+		status = "okay";
+		compatible = "simple-audio-card";
+		simple-audio-card,format = "i2s";
+		simple-audio-card,name = "rockchip,rk809-codec";
+		simple-audio-card,mclk-fs = <256>;
+		simple-audio-card,widgets =
+			"Speaker", "Ext Spk";
+		simple-audio-card,routing =
+			"Ext Spk", "HPOL";
+		simple-audio-card,cpu {
+			sound-dai = <&i2s1_8ch>;
+		};
+		simple-audio-card,codec {
+			sound-dai = <&rk809_codec>;
+		};
+	};
+
+	/*
+	 * WQ9201S WiFi/BT module (WL6201S, sheet 22). All signals are in
+	 * the VCCIO4 domain at 1.8V (sheet 14).
+	 */
+	sdio_pwrseq: sdio-pwrseq {
+		compatible = "mmc-pwrseq-simple";
+		pinctrl-names = "default";
+		pinctrl-0 = <&wifi_enable_h>;
+		post-power-on-delay-ms = <200>;
+		reset-gpios = <&gpio2 RK_PC0 GPIO_ACTIVE_LOW>; /* WIFI_REG_ON_H */
+	};
+
+	wireless_wlan: wireless-wlan {
+		compatible = "wlan-platdata";
+		rockchip,grf = <&grf>;
+		WIFI,poweren_gpio = <&gpio2 RK_PC0 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&wifi_host_wake_irq>;
+		WIFI,host_wake_irq = <&gpio2 RK_PB7 GPIO_ACTIVE_HIGH>;
+		status = "okay";
+	};
+
+	wireless_bluetooth: wireless-bluetooth {
+		compatible = "bluetooth-platdata";
+		uart_rts_gpios = <&gpio2 RK_PB5 GPIO_ACTIVE_LOW>;
+		pinctrl-names = "default", "rts_gpio";
+		pinctrl-0 = <&uart1m0_rtsn>;
+		pinctrl-1 = <&uart1_gpios>;
+		BT,reset_gpio    = <&gpio2 RK_PC1 GPIO_ACTIVE_HIGH>; /* BT_REG_ON_H */
+		BT,wake_gpio     = <&gpio2 RK_PB1 GPIO_ACTIVE_HIGH>; /* HOST_WAKE_BT_H */
+		BT,wake_host_irq = <&gpio2 RK_PB2 GPIO_ACTIVE_HIGH>; /* BT_WAKE_HOST_H */
+		status = "okay";
 	};
 };
 
@@ -364,6 +468,22 @@
 				};
 			};
 		};
+
+		/* I2S1_M0 link; spk-ctl drives NS4150B CTRL (sheets 7, 18) */
+		rk809_codec: codec {
+			#sound-dai-cells = <0>;
+			compatible = "rockchip,rk809-codec", "rockchip,rk817-codec";
+			clocks = <&cru I2S1_MCLKOUT_TX>;
+			clock-names = "mclk";
+			assigned-clocks = <&cru I2S1_MCLKOUT_TX>;
+			assigned-clock-parents = <&cru CLK_I2S1_8CH_TX>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&i2s1m0_mclk>;
+			spk-ctl-gpios = <&gpio1 RK_PB0 GPIO_ACTIVE_HIGH>;
+			hp-volume = <20>;
+			spk-volume = <3>;
+			status = "okay";
+		};
 	};
 };
 
@@ -504,4 +624,240 @@
 				<0 RK_PA2 RK_FUNC_GPIO  &pcfg_pull_none>;
 		};
 	};
+};
+
+/* I2C1 M0 (PMUIO2, 3.3V): board ID EEPROM FT24C32A @ 0x50 (sheets 11, 24) */
+&i2c1 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c1_xfer>;
+
+	eeprom@50 {
+		compatible = "atmel,24c32";
+		reg = <0x50>;
+		pagesize = <32>;
+	};
+};
+
+/*
+ * I2C2 M1 (VCCIO6, 1.8V): camera socket U14 (sheet 15). GC2613 (0x31)
+ * and GC2093 (0x37) share the bus, reset/pwdn GPIOs, supplies and the
+ * csi2_dphy0 -> rkisp_vir0 pipeline. Only one sensor is populated at a
+ * time; the absent one fails chip-id probe and the pipeline binds to
+ * the sensor that actually probes. Addresses/polarities pending
+ * first-board verification.
+ */
+&i2c2 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c2m1_xfer>;
+
+	gc2613: gc2613@31 {
+		compatible = "galaxycore,gc2613";
+		reg = <0x31>;
+		clocks = <&cru CLK_CIF_OUT>;
+		clock-names = "xvclk";
+		reset-gpios = <&gpio4 RK_PC1 GPIO_ACTIVE_LOW>;
+		pwdn-gpios = <&gpio3 RK_PC6 GPIO_ACTIVE_HIGH>;
+		avdd-supply = <&cam_2v8>;
+		dovdd-supply = <&vcc_1v8>;
+		dvdd-supply = <&cam_1v2>;
+		power-domains = <&power RK3568_PD_VI>;
+		rockchip,camera-module-index = <0>;
+		rockchip,camera-module-facing = "back";
+		status = "okay";
+
+		port {
+			gc2613_out: endpoint {
+				remote-endpoint = <&mipi_in_gc2613>;
+				data-lanes = <1 2>;
+			};
+		};
+	};
+
+	gc2093: gc2093@37 {
+		compatible = "galaxycore,gc2093";
+		reg = <0x37>;
+		clocks = <&cru CLK_CIF_OUT>;
+		clock-names = "xvclk";
+		reset-gpios = <&gpio4 RK_PC1 GPIO_ACTIVE_LOW>;
+		pwdn-gpios = <&gpio3 RK_PC6 GPIO_ACTIVE_HIGH>;
+		avdd-supply = <&cam_2v8>;
+		dovdd-supply = <&vcc_1v8>;
+		dvdd-supply = <&cam_1v2>;
+		power-domains = <&power RK3568_PD_VI>;
+		rockchip,camera-module-index = <0>;
+		rockchip,camera-module-facing = "back";
+		status = "okay";
+
+		port {
+			gc2093_out: endpoint {
+				remote-endpoint = <&mipi_in_gc2093>;
+				data-lanes = <1 2>;
+			};
+		};
+	};
+};
+
+/* I2C3 M1 (VCCIO5, 3.3V): Qwiic J6 and Face Board BTB share this bus */
+&i2c3 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c3m1_xfer>;
+};
+
+&i2s1_8ch {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2s1m0_sclktx
+		     &i2s1m0_lrcktx
+		     &i2s1m0_sdi0
+		     &i2s1m0_sdo0>;
+};
+
+&pwm8 {
+	status = "okay";
+	pinctrl-names = "active";
+	pinctrl-0 = <&pwm8m0_pins>;
+};
+
+/*
+ * SPI1 M1 (VCCIO5, 3.3V): ST25R100 NFC (sheets 17, 23).
+ * No in-tree driver in vendor 6.1; node stays disabled until the ST
+ * driver is ported and IRQ/reset polarities are confirmed on hardware.
+ */
+&spi1 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&spi1m1_pins &spi1m1_cs0>;
+	cs-gpios = <&gpio3 RK_PA1 GPIO_ACTIVE_LOW>;
+
+	st25r100@0 {
+		compatible = "st,st25r100";
+		reg = <0>;
+		status = "disabled";
+		spi-max-frequency = <5000000>;
+		interrupt-parent = <&gpio3>;
+		interrupts = <RK_PC4 IRQ_TYPE_EDGE_RISING>;
+		reset-gpios = <&gpio3 RK_PC5 GPIO_ACTIVE_LOW>;
+	};
+};
+
+/* UART3 M1: DYNAMIXEL half-duplex bus via SN74LVC1G126/1G125 (sheet 24) */
+&uart3 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart3m1_xfer>;
+};
+
+/* SDMMC1 (VCCIO4, 1.8V): WQ9201S SDIO WiFi (sheets 14, 22) */
+&sdmmc1 {
+	supports-sdio;
+	bus-width = <4>;
+	disable-wp;
+	cap-sd-highspeed;
+	cap-sdio-irq;
+	keep-power-in-suspend;
+	non-removable;
+	no-sd;
+	no-mmc;
+	rockchip,default-sample-phase = <180>;
+	mmc-pwrseq = <&sdio_pwrseq>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&sdmmc1_bus4 &sdmmc1_cmd &sdmmc1_clk>;
+	sd-uhs-sdr104;
+	status = "okay";
+};
+
+/* UART1 M0 (VCCIO4, 1.8V): WQ9201S Bluetooth HCI (sheets 14, 22) */
+&uart1 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart1m0_xfer &uart1m0_ctsn>;
+};
+
+&pinctrl {
+	wifi {
+		wifi_enable_h: wifi-enable-h {
+			rockchip,pins = <2 RK_PC0 RK_FUNC_GPIO &pcfg_pull_none>;
+		};
+
+		wifi_host_wake_irq: wifi-host-wake-irq {
+			rockchip,pins = <2 RK_PB7 RK_FUNC_GPIO &pcfg_pull_down>;
+		};
+	};
+
+	wireless-bluetooth {
+		uart1_gpios: uart1-gpios {
+			rockchip,pins = <2 RK_PB5 RK_FUNC_GPIO &pcfg_pull_none>;
+		};
+	};
+};
+
+/* camera -> csi2_dphy0 -> rkisp_vir0, 2-lane (sheets 15, 16) */
+&csi2_dphy_hw {
+	status = "okay";
+};
+
+&csi2_dphy0 {
+	status = "okay";
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		port@0 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			mipi_in_gc2613: endpoint@1 {
+				reg = <1>;
+				remote-endpoint = <&gc2613_out>;
+				data-lanes = <1 2>;
+			};
+			mipi_in_gc2093: endpoint@2 {
+				reg = <2>;
+				remote-endpoint = <&gc2093_out>;
+				data-lanes = <1 2>;
+			};
+		};
+		port@1 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			dphy0_out: endpoint@1 {
+				reg = <1>;
+				remote-endpoint = <&isp0_in>;
+			};
+		};
+	};
+};
+
+&rkisp {
+	status = "okay";
+};
+
+&rkisp_mmu {
+	status = "okay";
+};
+
+&rkisp_vir0 {
+	status = "okay";
+	port {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		isp0_in: endpoint@0 {
+			reg = <0>;
+			remote-endpoint = <&dphy0_out>;
+		};
+	};
+};
+
+/* rkcif drives CIF_CLKOUT (GPIO4_C0, 1.8V) as the 24MHz sensor MCLK */
+&rkcif {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&cif_clk>;
+	assigned-clocks = <&cru CLK_CIF_OUT>;
+	assigned-clock-rates = <24000000>;
+};
+
+&rkcif_mmu {
+	status = "okay";
 };
