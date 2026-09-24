@@ -216,10 +216,11 @@
 &i2c0 {
 	status = "okay";
 
-	vdd_cpu: rk860x@40 {
+	/* chip answers at 0x41 on D4 hardware (measured via i2cdetect) */
+	vdd_cpu: rk860x@41 {
 		status = "okay";
 		compatible = "silergy,syr827";
-		reg = <0x40>;
+		reg = <0x41>;
 		vin-supply = <&vcc5v0_sys>;
 		regulator-compatible = "fan53555-reg";
 		regulator-name = "vdd_cpu";
