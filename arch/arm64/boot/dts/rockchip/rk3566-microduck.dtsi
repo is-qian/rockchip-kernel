@@ -735,13 +735,14 @@
 &spi1 {
 	status = "okay";
 	pinctrl-names = "default";
-	pinctrl-0 = <&spi1m1_pins &spi1m1_cs0>;
+	pinctrl-0 = <&spi1m1_pins>;
 	cs-gpios = <&gpio3 RK_PA1 GPIO_ACTIVE_LOW>;
 
+	/* no kernel driver for st25r100; spidev for userspace access */
 	st25r100@0 {
-		compatible = "st,st25r100";
+		compatible = "spidev";
 		reg = <0>;
-		status = "disabled";
+		status = "okay";
 		spi-max-frequency = <5000000>;
 		interrupt-parent = <&gpio3>;
 		interrupts = <RK_PC4 IRQ_TYPE_EDGE_RISING>;
