@@ -746,7 +746,7 @@
 		spi-max-frequency = <5000000>;
 		interrupt-parent = <&gpio3>;
 		interrupts = <RK_PC4 IRQ_TYPE_EDGE_RISING>;
-		reset-gpios = <&gpio3 RK_PC5 GPIO_ACTIVE_LOW>;
+		reset-gpios = <&gpio3 RK_PC5 GPIO_ACTIVE_HIGH>;
 	};
 };
 
