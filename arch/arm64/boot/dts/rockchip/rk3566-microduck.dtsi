@@ -568,6 +568,8 @@
 			pinctrl-names = "default";
 			pinctrl-0 = <&i2s1m0_mclk>;
 			spk-ctl-gpios = <&gpio1 RK_PB0 GPIO_ACTIVE_HIGH>;
+			/* NS4150B is fed from HPL_OUT, not the class-D SPK_OUT pins */
+			use-ext-amplifier;
 			hp-volume = <20>;
 			spk-volume = <3>;
 			status = "okay";
@@ -813,6 +815,8 @@
 
 &i2s1_8ch {
 	status = "okay";
+	/* only TX clocks are wired to the codec; RX shares them */
+	rockchip,trcm-sync-tx-only;
 	pinctrl-names = "default";
 	pinctrl-0 = <&i2s1m0_sclktx
 		     &i2s1m0_lrcktx
