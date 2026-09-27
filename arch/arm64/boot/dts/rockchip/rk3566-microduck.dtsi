@@ -209,6 +209,27 @@
 		};
 	};
 
+	/* Face Board PDM mic MSM261DHP006, L/R tied to GND (sheet 03) */
+	dmic_codec: dmic-codec {
+		compatible = "dmic-codec";
+		num-channels = <2>;
+		#sound-dai-cells = <0>;
+	};
+
+	face_mic_sound: face-mic-sound {
+		compatible = "simple-audio-card";
+		simple-audio-card,name = "face-mic";
+		simple-audio-card,format = "pdm";
+
+		simple-audio-card,cpu {
+			sound-dai = <&pdm>;
+		};
+
+		simple-audio-card,codec {
+			sound-dai = <&dmic_codec>;
+		};
+	};
+
 	/*
 	 * WQ9201S WiFi/BT module (WL6201S, sheet 22). All signals are in
 	 * the VCCIO4 domain at 1.8V (sheet 14).
@@ -797,6 +818,13 @@
 		     &i2s1m0_lrcktx
 		     &i2s1m0_sdi0
 		     &i2s1m0_sdo0>;
+};
+
+/* Face Board PDM mic on CLK1/SDI1 M0 (sheet 03) */
+&pdm {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&pdmm0_clk1 &pdmm0_sdi1>;
 };
 
 &pwm8 {
