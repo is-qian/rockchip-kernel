@@ -95,6 +95,72 @@
 		};
 	};
 
+	/* Face Board LEDs (sheet 04): behind PCA9535, active high via NPN switches */
+	face_leds: face-leds {
+		compatible = "gpio-leds";
+
+		led_cam {
+			label = "face:cam:red";
+			gpios = <&pca9535 0 GPIO_ACTIVE_HIGH>;
+		};
+
+		led_green1 {
+			label = "face:green1:green";
+			gpios = <&pca9535 1 GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "heartbeat";
+		};
+
+		led_green2 {
+			label = "face:green2:green";
+			gpios = <&pca9535 2 GPIO_ACTIVE_HIGH>;
+		};
+
+		led_rgb_blue {
+			label = "face:rgb:blue";
+			gpios = <&pca9535 3 GPIO_ACTIVE_HIGH>;
+		};
+
+		led_rgb_green {
+			label = "face:rgb:green";
+			gpios = <&pca9535 4 GPIO_ACTIVE_HIGH>;
+		};
+
+		led_rgb_red {
+			label = "face:rgb:red";
+			gpios = <&pca9535 5 GPIO_ACTIVE_HIGH>;
+		};
+
+		led_gb_blue {
+			label = "face:gb:blue";
+			gpios = <&pca9535 8 GPIO_ACTIVE_HIGH>;
+		};
+
+		led_gb_green {
+			label = "face:gb:green";
+			gpios = <&pca9535 9 GPIO_ACTIVE_HIGH>;
+		};
+
+		led_gr_red1 {
+			label = "face:gr1:red";
+			gpios = <&pca9535 10 GPIO_ACTIVE_HIGH>;
+		};
+
+		led_gr_green1 {
+			label = "face:gr1:green";
+			gpios = <&pca9535 11 GPIO_ACTIVE_HIGH>;
+		};
+
+		led_gr_red2 {
+			label = "face:gr2:red";
+			gpios = <&pca9535 12 GPIO_ACTIVE_HIGH>;
+		};
+
+		led_gr_green2 {
+			label = "face:gr2:green";
+			gpios = <&pca9535 13 GPIO_ACTIVE_HIGH>;
+		};
+	};
+
 	/*
 	 * Camera rails: CAM_1V8 is VCC_1V8 through R24 0R. CAM_1V2/CAM_2V8
 	 * come from SGM2036S LDOs whose EN pins chain off CAM_1V8/CAM_1V2,
@@ -710,6 +776,18 @@
 	status = "okay";
 	pinctrl-names = "default";
 	pinctrl-0 = <&i2c3m1_xfer>;
+
+	/* Face Board PCA9535 IO expander (sheet 04); INT to GPIO4_C7 via R40 */
+	pca9535: gpio@20 {
+		compatible = "nxp,pca9535";
+		reg = <0x20>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		interrupt-controller;
+		#interrupt-cells = <2>;
+		interrupt-parent = <&gpio4>;
+		interrupts = <RK_PC7 IRQ_TYPE_LEVEL_LOW>;
+	};
 };
 
 &i2s1_8ch {
