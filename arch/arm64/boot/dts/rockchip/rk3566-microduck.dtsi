@@ -856,6 +856,22 @@
 	};
 };
 
+/*
+ * SPI3 M0 (VCCIO6, 1.8V): Face Board VL53L8CX ToF (sheet 03).
+ * Userspace ULD via spidev; TOF_INT/TOF_SYNC left unused (polling).
+ */
+&spi3 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&spi3m0_pins &spi3m0_cs0>;
+
+	tof@0 {
+		compatible = "spidev";
+		reg = <0>;
+		spi-max-frequency = <8000000>;
+	};
+};
+
 /* UART3 M1: DYNAMIXEL half-duplex bus via SN74LVC1G126/1G125 (sheet 24) */
 &uart3 {
 	status = "okay";
