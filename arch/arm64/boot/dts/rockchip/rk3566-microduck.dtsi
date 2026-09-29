@@ -828,6 +828,8 @@
 	status = "okay";
 	pinctrl-names = "default";
 	pinctrl-0 = <&pdmm0_clk1 &pdmm0_sdi1>;
+	/* PATH0 carries the capture pair; mic data is on SDI1, not SDI0 */
+	rockchip,path-map = <1 0 2 3>;
 };
 
 &pwm8 {
