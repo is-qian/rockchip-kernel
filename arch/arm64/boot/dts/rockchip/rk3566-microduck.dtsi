@@ -636,6 +636,22 @@
 	status = "okay";
 };
 
+/* TP70/TP71 are the phy0 host-port pair (for the USB3.0 HOST controller) */
+&u2phy0_host {
+	status = "okay";
+};
+
+&usbhost30 {
+	status = "okay";
+};
+
+&usbhost_dwc3 {
+	phys = <&u2phy0_host>;
+	phy-names = "usb2-phy";
+	maximum-speed = "high-speed";
+	status = "okay";
+};
+
 &u2phy0_otg {
 	status = "okay";
 };
