@@ -16,6 +16,7 @@
 #include <dt-bindings/pinctrl/rockchip.h>
 #include <dt-bindings/input/rk-input.h>
 #include <dt-bindings/power/rk3568-power.h>
+#include <dt-bindings/thermal/thermal.h>
 #include "rk3566.dtsi"
 
 / {
@@ -630,6 +631,46 @@
 
 &tsadc {
 	status = "okay";
+};
+
+/* fan ramps up before passive CPU throttling kicks in at 75C */
+&soc_thermal {
+	trips {
+		fan_low: fan-low {
+			temperature = <40000>;
+			hysteresis = <2000>;
+			type = "active";
+		};
+
+		fan_mid: fan-mid {
+			temperature = <65000>;
+			hysteresis = <2000>;
+			type = "active";
+		};
+
+		fan_high: fan-high {
+			temperature = <70000>;
+			hysteresis = <2000>;
+			type = "active";
+		};
+	};
+
+	cooling-maps {
+		map2 {
+			trip = <&fan_low>;
+			cooling-device = <&fan THERMAL_NO_LIMIT 1>;
+		};
+
+		map3 {
+			trip = <&fan_mid>;
+			cooling-device = <&fan 2 3>;
+		};
+
+		map4 {
+			trip = <&fan_high>;
+			cooling-device = <&fan 4 THERMAL_NO_LIMIT>;
+		};
+	};
 };
 
 &usb2phy0 {
