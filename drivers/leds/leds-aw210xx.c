@@ -448,8 +448,6 @@ static int aw210xx_hw_enable(struct aw210xx *aw210xx, bool flag)
 		} else {
 			gpio_set_value_cansleep(aw210xx->enable_gpio, 0);
 		}
-	} else {
-		AW_ERR("failed\n");
 	}
 
 	return 0;
@@ -696,8 +694,11 @@ hwen_show(struct device *dev, struct device_attribute *attr, char *buf)
 	struct aw210xx *aw210xx = container_of(led_cdev, struct aw210xx, cdev);
 	ssize_t len = 0;
 
-	len += snprintf(buf + len, PAGE_SIZE - len, "hwen=%d\n",
-			gpio_get_value(aw210xx->enable_gpio));
+	if (gpio_is_valid(aw210xx->enable_gpio))
+		len += snprintf(buf + len, PAGE_SIZE - len, "hwen=%d\n",
+				gpio_get_value(aw210xx->enable_gpio));
+	else
+		len += snprintf(buf + len, PAGE_SIZE - len, "hwen=always-on\n");
 	return len;
 }
 
