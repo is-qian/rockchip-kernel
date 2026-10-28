@@ -1047,7 +1047,7 @@ static int aw210xx_i2c_probe(struct i2c_client *i2c, const struct i2c_device_id 
 	}
 
 	dev_set_drvdata(&i2c->dev, aw210xx);
-	aw210xx_parse_led_cdev(aw210xx, np);
+	ret = aw210xx_parse_led_cdev(aw210xx, np);
 	if (ret < 0) {
 		pr_err("error creating led class dev\n");
 		goto err_sysfs;
