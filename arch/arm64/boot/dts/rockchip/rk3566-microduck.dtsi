@@ -854,8 +854,7 @@
 	/*
 	 * Face Board V1.0 LED drivers (sheet 04). AW21009 EN is pulled up on
 	 * board (R36), AW2023 INTN goes to GPIO4_C7 via R40.
-	 * LED0/1/2 to R/G/B mapping is not marked in the schematic, confirm
-	 * on first board.
+	 * AW2023 channel order from the LED1 symbol: LED0=B, LED1=G, LED2=R.
 	 */
 	aw21009: led-controller@20 {
 		compatible = "awinic,aw210xx_led";
@@ -883,17 +882,17 @@
 
 		led@0 {
 			reg = <0>;
-			label = "face:rgb:0";
+			label = "face:rgb:blue";
 		};
 
 		led@1 {
 			reg = <1>;
-			label = "face:rgb:1";
+			label = "face:rgb:green";
 		};
 
 		led@2 {
 			reg = <2>;
-			label = "face:rgb:2";
+			label = "face:rgb:red";
 		};
 	};
 
