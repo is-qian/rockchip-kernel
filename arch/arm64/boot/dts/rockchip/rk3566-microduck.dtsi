@@ -989,6 +989,7 @@
 	status = "okay";
 	pinctrl-names = "default";
 	pinctrl-0 = <&uart3m1_xfer>;
+	dma-names = "tx", "rx";
 };
 
 /* SDMMC1 (VCCIO4, 1.8V): WQ9201S SDIO WiFi (sheets 14, 22) */
@@ -1015,6 +1016,7 @@
 	status = "okay";
 	pinctrl-names = "default";
 	pinctrl-0 = <&uart1m0_xfer &uart1m0_ctsn>;
+	dma-names = "tx", "rx";
 };
 
 &pinctrl {
