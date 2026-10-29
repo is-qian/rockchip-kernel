@@ -1088,6 +1088,7 @@ static const struct of_device_id aw210xx_dt_match[] = {
 	{.compatible = "awinic,aw210xx_led"},
 	{}
 };
+MODULE_DEVICE_TABLE(of, aw210xx_dt_match);
 
 static struct i2c_driver aw210xx_i2c_driver = {
 	.driver = {
