@@ -471,8 +471,8 @@ static int aw210xx_led_init(struct aw210xx *aw210xx)
 	aw210xx_global_set(aw210xx);
 	/* under voltage lock out */
 	aw210xx_uvlo_set(aw210xx, true);
-	/* apse enable */
-	aw210xx_apse_set(aw210xx, true);
+	/* keep APSE off: chip never wakes from power-save on SL/BR writes */
+	aw210xx_apse_set(aw210xx, false);
 
 	return 0;
 }
