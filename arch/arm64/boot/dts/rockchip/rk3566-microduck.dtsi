@@ -857,18 +857,20 @@
 	 * AW2023 channel order from the LED1 symbol: LED0=B, LED1=G, LED2=R.
 	 */
 	aw21009: led-controller@20 {
-		compatible = "awinic,aw210xx_led";
+		compatible = "awinic,aw21009";
 		reg = <0x20>;
-		osc_clk = <1>;		/* 16 MHz */
-		br_res = <1>;		/* 8-bit PWM */
-		global_current = <0xff>;
+		#address-cells = <1>;
+		#size-cells = <0>;
 
-		aw210xx_led {
-			aw210xx,name = "aw21009";
-			aw210xx,imax = <1>;
-			aw210xx,brightness = <0>;
-			aw210xx,max_brightness = <255>;
-		};
+		led@1 { reg = <1>; label = "face:gr1:red"; };
+		led@2 { reg = <2>; label = "face:gr1:green"; };
+		led@3 { reg = <3>; label = "face:green2:green"; };
+		led@4 { reg = <4>; label = "face:green1:green"; linux,default-trigger = "heartbeat"; };
+		led@5 { reg = <5>; label = "face:gb:green"; };
+		led@6 { reg = <6>; label = "face:gb:blue"; };
+		led@7 { reg = <7>; label = "face:gr2:green"; };
+		led@8 { reg = <8>; label = "face:gr2:red"; };
+		led@9 { reg = <9>; label = "face:cam:red"; };
 	};
 
 	aw2023: led-controller@45 {

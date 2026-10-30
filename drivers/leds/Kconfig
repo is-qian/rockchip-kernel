@@ -115,15 +115,15 @@ config LEDS_AW2023
 	  To compile this driver as a module, choose M here: the module
 	  will be called leds-aw2023.
 
-config LEDS_AW210XX
-	tristate "LED support for Awinic AW21009/12/18"
+config LEDS_AW21009
+	tristate "LED support for Awinic AW21009"
 	depends on LEDS_CLASS && I2C
 	help
-	  This option enables support for the AW210XX family multi-channel
-	  LED driver (vendor port from Awinic).
+	  This option enables support for the AW21009 9-channel
+	  LED driver, one LED class device per channel.
 
 	  To compile this driver as a module, choose M here: the module
-	  will be called leds-aw210xx.
+	  will be called leds-aw21009.
 
 config LEDS_BCM6328
 	tristate "LED Support for Broadcom BCM6328"
