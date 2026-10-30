@@ -207,7 +207,8 @@
 #define AW21018_GROUP_DISABLE				(0x40)
 #define AW21012_GROUP_ENABLE				(0x3C)
 #define AW21012_GROUP_DISABLE				(0x40)
-#define AW21009_GROUP_ENABLE				(0x38)
+/* GCFG: GE[2:0] group enable, GSLDIS(bit6)=1 for per-LED SL color */
+#define AW21009_GROUP_ENABLE				(0x07)
 #define AW21009_GROUP_DISABLE				(0x40)
 #define AW210XX_GLOBAL_DEFAULT_SET			(0x66)
 #define AW210XX_GBRH_DEFAULT_SET			(0x60)
